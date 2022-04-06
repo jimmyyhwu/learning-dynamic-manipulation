@@ -1,0 +1,21 @@
+# Simulation
+pybullet==3.1.7
+tensorboard==2.5.0
+future==0.18.2
+scipy==1.6.3
+scikit-image==0.18.1
+PyYAML==5.4.1
+munch==2.5.0
+jupyter==1.0.0
+pandas==1.2.4
+tqdm==4.61.1
+prompt-toolkit==3.0.19
+Cython==0.29.23
+opencv-contrib-python-headless==4.4.0.46
+PyQt5==5.15.4
+fpdf==1.7.2
+
+# Real robot
+anki-vector==0.6.0
+zeroconf==0.24.0  # Do not upgrade
+pyglet==1.5.17

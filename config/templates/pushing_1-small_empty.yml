@@ -1,0 +1,79 @@
+# General
+experiment_name: pushing_1-small_empty
+run_name:
+logs_dir:
+checkpoints_dir:
+log_dir:
+checkpoint_dir:
+policy_path:
+checkpoint_path:
+
+# Learning
+batch_size: 32
+learning_rate: 0.01
+weight_decay: 0
+grad_norm_clipping: 100
+num_input_channels: 4
+checkpoint_freq: 1000
+checkpoint_freq_mins: 30
+
+# DQN
+total_timesteps:
+exploration_frac: 0.1
+replay_buffer_size: 10000
+use_double_dqn: true
+discount_factors:
+final_exploration: 0.01
+learning_starts_frac: 0.025
+train_freq: 1
+target_update_freq: 1000
+
+# Multi-frequency
+num_mid_steps_per_high_step: 0
+num_low_steps_per_mid_step: 0
+accumulate_lower_level_rewards: true
+
+# Simulation
+
+# Room configuration
+robot_config: [pushing_robot: 1]
+room_length: 1.0
+room_width: 0.5
+num_objects: 50
+object_width: 0.012  # 12 mm
+object_mass: 0.00009  # 0.09 g
+env_name: small_empty
+
+# Robot configuration
+slowing_sim_step_target: 50
+blowing_sim_step_target: 100
+blowing_fov: 15
+blowing_num_wind_particles: 40
+blowing_wind_particle_sparsity: 2
+blowing_wind_particle_radius: 0.003
+blowing_wind_particle_mass: 0.001
+blowing_force: 0.35
+
+# State representation
+overhead_map_scale: 1.0
+use_robot_map: true
+robot_map_scale: 1.0
+use_distance_to_receptacle_map: false
+distance_to_receptacle_map_scale: 0.25
+use_shortest_path_to_receptacle_map: true
+use_shortest_path_map: true
+shortest_path_map_scale: 0.25
+
+# Rewards
+use_shortest_path_partial_rewards: true
+success_reward: 1.0
+partial_rewards_scale: 2.0
+obstacle_collision_penalty: 0.25
+robot_collision_penalty: 1.0
+
+# Misc
+use_shortest_path_movement: true
+use_partial_observations: true
+inactivity_cutoff_per_robot: 100
+num_parallel_collectors: 8
+show_gui: false
