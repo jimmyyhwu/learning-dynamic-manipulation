@@ -775,7 +775,7 @@ class Robot(ABC):
         self.target_end_effector_position = None
         self.waypoint_positions = None
         self.waypoint_headings = None
-        self.controller = RealRobotController(self, real_robot_index, debug=self.env.real_debug) if real else RobotController(self)
+        self.controller = RealRobotController(self.env, self, real_robot_index, debug=self.env.real_debug) if real else RobotController(self.env, self)
 
         # Collision detection
         self.collision_body_a_ids_set = set([self.id])
@@ -1038,15 +1038,7 @@ class PushingRobot(Robot):
         dist_closer = self.mapper.distance_to_receptacle(initial_object_positions[object_id]) - self.mapper.distance_to_receptacle(object_position)
         self.object_dist_closer += dist_closer
 
-class MoveOrRotateRobot(Robot):
-    NUM_OUTPUT_CHANNELS = 2
-
-    def _compute_waypoints(self, *args, use_shortest_path_movement=True):
-        if self.action[0] == 1:
-            return super()._compute_waypoints(*args, use_shortest_path_movement=False)
-        return super()._compute_waypoints(*args, use_shortest_path_movement=use_shortest_path_movement)
-
-class BlowingRobot(MoveOrRotateRobot):
+class BlowingRobot(Robot):
     NUM_OUTPUT_CHANNELS = 2
     BLOWER_THICKNESS = 0.015
     TUBE_LENGTH = 0.025
@@ -1086,6 +1078,11 @@ class BlowingRobot(MoveOrRotateRobot):
     def store_new_action(self, action):
         super().store_new_action(action)
         self.object_dist_closer = 0
+
+    def _compute_waypoints(self, *args, use_shortest_path_movement=True):
+        if self.action[0] == 1:
+            return super()._compute_waypoints(*args, use_shortest_path_movement=False)
+        return super()._compute_waypoints(*args, use_shortest_path_movement=use_shortest_path_movement)
 
     def process_object_success(self):
         super().process_object_success()
@@ -1221,7 +1218,8 @@ class RobotController:
     TURN_STEP_SIZE = math.radians(5)  # 5 deg results in exactly 1 deg per simulation step
     ROTATION_TURN_THRESHOLD = math.radians(1)  # For blowing robots
 
-    def __init__(self, robot):
+    def __init__(self, env, robot):
+        self.env = env
         self.robot = robot
         self.state = 'idle'
         self.next_state = None
@@ -1285,7 +1283,7 @@ class RobotController:
                     if self.waypoint_index == len(self.robot.waypoint_positions) - 1:
                         self.state = 'slowing'
                         self.next_state = 'idle'
-                        self.slowing_sim_step_target = self.robot.env.slowing_sim_step_target
+                        self.slowing_sim_step_target = self.env.slowing_sim_step_target
                     else:
                         self.waypoint_index += 1
                         self.state = 'turning'
@@ -1307,13 +1305,13 @@ class RobotController:
                         if abs(heading_diff) < RobotController.ROTATION_TURN_THRESHOLD:
                             self.state = 'slowing'
                             self.next_state = 'idle'
-                            self.slowing_sim_step_target = self.robot.env.slowing_sim_step_target + self.robot.env.blowing_sim_step_target
+                            self.slowing_sim_step_target = self.env.slowing_sim_step_target + self.env.blowing_sim_step_target
                     else:
                         if self.waypoint_index == 1:
                             # Only the first turn requires slowing before driving
                             self.state = 'slowing'
                             self.next_state = 'driving'
-                            self.slowing_sim_step_target = self.robot.env.slowing_sim_step_target
+                            self.slowing_sim_step_target = self.env.slowing_sim_step_target
                         else:
                             self.state = 'driving'
 
@@ -1327,7 +1325,7 @@ class RobotController:
                     else:
                         move_sign = math.copysign(1, distance(current_position, self.robot.target_end_effector_position) - self.robot.END_EFFECTOR_LOCATION)
                         # Note: To be consistent with rest of code, the line above should include an offset
-                        #move_sign = math.copysign(1, distance(current_position, self.robot.target_end_effector_position) - (self.robot.END_EFFECTOR_LOCATION + self.robot.env.object_width / 2))
+                        #move_sign = math.copysign(1, distance(current_position, self.robot.target_end_effector_position) - (self.robot.END_EFFECTOR_LOCATION + self.env.object_width / 2))
                         new_heading = math.atan2(move_sign * dy, move_sign * dx)
                         new_position = (
                             new_position[0] + move_sign * RobotController.DRIVE_STEP_SIZE * math.cos(new_heading),
@@ -1336,7 +1334,7 @@ class RobotController:
                         )
 
                 # Set constraint
-                self.robot.env.p.changeConstraint(
+                self.env.p.changeConstraint(
                     self.robot.cid, jointChildPivot=new_position, jointChildFrameOrientation=heading_to_orientation(new_heading), maxForce=Robot.CONSTRAINT_MAX_FORCE)
 
             if self.state != 'slowing':
@@ -1357,7 +1355,8 @@ class RealRobotController:
     LOOKAHEAD_DISTANCE = 0.1  # 10 cm
     TURN_THRESHOLD = math.radians(5)  # 5 deg
 
-    def __init__(self, robot, real_robot_index, debug=False):
+    def __init__(self, env, robot, real_robot_index, debug=False):
+        self.env = env
         self.robot = robot
         self.real_robot_name = vector_utils.get_robot_name(real_robot_index)
         self.debug = debug
@@ -1465,7 +1464,7 @@ class RealRobotController:
                         self.real_robot.motors.set_wheel_motors(-1 * sign * speed, sign * speed)
 
             elif self.state in {'driving', 'slowing'}:
-                signed_dist = distance(current_position, self.robot.target_end_effector_position) - (self.robot.END_EFFECTOR_LOCATION + self.robot.env.object_width / 2)
+                signed_dist = distance(current_position, self.robot.target_end_effector_position) - (self.robot.END_EFFECTOR_LOCATION + self.env.object_width / 2)
                 speed = max(20, min(100, 2000 * abs(signed_dist))) if self.state == 'slowing' else 100  # Must be at least 20 for marker detection to detect changes
 
                 if self.prev_position is not None:
