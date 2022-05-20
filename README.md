@@ -50,6 +50,7 @@ You can then use `enjoy.py` to run a pretrained policy in the simulation environ
 ```bash
 python enjoy.py --config-path logs/pretrained-blowing_1-small_empty-multifreq_4/config.yml
 python enjoy.py --config-path logs/pretrained-blowing_1-large_empty-multifreq_4/config.yml
+python enjoy.py --config-path logs/pretrained-blowing_1-large_columns-multifreq_4/config.yml
 python enjoy.py --config-path logs/pretrained-blowing_1-large_door-multifreq_4/config.yml
 python enjoy.py --config-path logs/pretrained-blowing_1-large_center-multifreq_4/config.yml
 ```

@@ -106,7 +106,7 @@ def main():
             'moving_blowing_1-small_empty-base',
             'side_blowing_1-small_empty-base',
         ]:
-        for env_name in ['large_empty', 'large_door', 'large_center']:
+        for env_name in ['large_empty', 'large_columns', 'large_door', 'large_center']:
             experiment_name = template_experiment_name.replace('small_empty', env_name)
             generate_experiment(experiment_name, template_experiment_name, lambda x: modify_cfg_env_name(x, env_name), output_dir)
 
@@ -135,18 +135,22 @@ def main():
     for template_experiment_name in [
             'pushing_1-small_empty-base',
             'pushing_1-large_empty-base',
+            'pushing_1-large_columns-base',
             'pushing_1-large_door-base',
             'pushing_1-large_center-base',
             'blowing_1-small_empty-base',
             'blowing_1-large_empty-base',
+            'blowing_1-large_columns-base',
             'blowing_1-large_door-base',
             'blowing_1-large_center-base',
             'moving_blowing_1-small_empty-base',
             'moving_blowing_1-large_empty-base',
+            'moving_blowing_1-large_columns-base',
             'moving_blowing_1-large_door-base',
             'moving_blowing_1-large_center-base',
             'side_blowing_1-small_empty-base',
             'side_blowing_1-large_empty-base',
+            'side_blowing_1-large_columns-base',
             'side_blowing_1-large_door-base',
             'side_blowing_1-large_center-base',
         ]:
@@ -162,6 +166,7 @@ def main():
     for template_experiment_name in [
             'blowing_1-small_empty-base',
             'blowing_1-large_empty-base',
+            'blowing_1-large_columns-base',
             'blowing_1-large_door-base',
             'blowing_1-large_center-base',
         ]:
@@ -177,6 +182,7 @@ def main():
     for template_experiment_name in [
             'blowing_1-small_empty-multifreq_4',
             'blowing_1-large_empty-multifreq_4',
+            'blowing_1-large_columns-multifreq_4',
             'blowing_1-large_door-multifreq_4',
             'blowing_1-large_center-multifreq_4',
         ]:

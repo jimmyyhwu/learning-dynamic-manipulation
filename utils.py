@@ -206,8 +206,7 @@ def get_env_from_cfg(cfg, **kwargs):
         if arg_name in cfg:
             final_kwargs[arg_name] = cfg[arg_name]
         else:
-            print('kwarg {} not found in config'.format(arg_name))
-            raise Exception
+            raise Exception('kwarg {} not found in config'.format(arg_name))
     final_kwargs.update(kwargs)
 
     # Additional modifications for real robot

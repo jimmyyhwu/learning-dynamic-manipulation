@@ -10,6 +10,8 @@ import pybullet
 import pybullet_utils.bullet_client as bc
 from scipy.ndimage import rotate as rotate_image
 from scipy.ndimage.morphology import distance_transform_edt
+from shapely.geometry import box
+from shapely.ops import unary_union
 from skimage.draw import line
 from skimage.morphology import binary_dilation, dilation
 from skimage.morphology.selem import disk
@@ -35,7 +37,7 @@ class VectorEnv:
         # This comment is here to make code folding work
             self,
             robot_config=None, room_length=1.0, room_width=0.5,
-            num_objects=10, object_width=0.012, object_mass=0.00009,
+            num_objects=10, object_type=None, object_width=0.012, object_mass=0.00009,
             env_name='small_empty',
             slowing_sim_step_target=50, blowing_sim_step_target=100,
             blowing_fov=15, blowing_num_wind_particles=40, blowing_wind_particle_sparsity=2,
@@ -62,6 +64,7 @@ class VectorEnv:
         self.room_length = room_length
         self.room_width = room_width
         self.num_objects = num_objects
+        self.object_type = object_type
         self.object_width = object_width
         self.object_mass = object_mass
         self.env_name = env_name
@@ -477,14 +480,68 @@ class VectorEnv:
         self.last_robot_index = 0
 
         # Create objects
-        object_radius = self.object_width / 2
-        object_collision_shape_id = self.p.createCollisionShape(pybullet.GEOM_SPHERE, radius=object_radius)
-        object_visual_shape_id = self.p.createVisualShape(pybullet.GEOM_SPHERE, radius=object_radius, rgbaColor=VectorEnv.OBJECT_COLOR)
-        self.object_ids = []
-        for _ in range(self.num_objects):
-            object_id = self.p.createMultiBody(self.object_mass, object_collision_shape_id, object_visual_shape_id)
-            self.p.changeDynamics(object_id, -1, lateralFriction=0.5, rollingFriction=0.001)
-            self.object_ids.append(object_id)
+        if self.object_type == 'mixed_sizes':
+            default_object_radius = self.object_width / 2
+            self.object_ids = []
+            for _ in range(self.num_objects):
+                scale = self.room_random_state.uniform(1, 2)
+                object_radius = scale * default_object_radius
+                object_mass = self.object_mass * scale**3
+                object_collision_shape_id = self.p.createCollisionShape(pybullet.GEOM_SPHERE, radius=object_radius)
+                color = list(VectorEnv.OBJECT_COLOR)
+                color[2] += (scale - 1)
+                object_visual_shape_id = self.p.createVisualShape(pybullet.GEOM_SPHERE, radius=object_radius, rgbaColor=color)
+                object_id = self.p.createMultiBody(object_mass, object_collision_shape_id, object_visual_shape_id)
+                self.p.changeDynamics(object_id, -1, lateralFriction=0.5, rollingFriction=0.001)
+                self.object_ids.append(object_id)
+
+        elif self.object_type == 'mixed_shapes':
+            self.object_ids = []
+            for _ in range(self.num_objects):
+                shape_idx = self.room_random_state.randint(4)
+                color = [
+                    (242.0 / 255, 142.0 / 255, 43.0 / 255, 1),  # Orange
+                    (89.0 / 255, 169.0 / 255, 79.0 / 255, 1),  # Green
+                    (78.0 / 255, 121.0 / 255, 167.0 / 255, 1),  # Blue
+                    VectorEnv.OBJECT_COLOR,  # Yellow
+                ][shape_idx]
+                if shape_idx == 0:
+                    # Cube
+                    object_half_extents = (self.object_width / 2, self.object_width / 2, self.object_width / 2)
+                    object_collision_shape_id = self.p.createCollisionShape(pybullet.GEOM_BOX, halfExtents=object_half_extents)
+                    object_visual_shape_id = self.p.createVisualShape(pybullet.GEOM_BOX, halfExtents=object_half_extents, rgbaColor=color)
+                    object_id = self.p.createMultiBody(self.object_mass, object_collision_shape_id, object_visual_shape_id)
+                elif shape_idx == 1:
+                    # Rectangular cuboid
+                    object_half_extents = (self.object_width, self.object_width / 2, self.object_width / 2)
+                    object_collision_shape_id = self.p.createCollisionShape(pybullet.GEOM_BOX, halfExtents=object_half_extents)
+                    object_visual_shape_id = self.p.createVisualShape(pybullet.GEOM_BOX, halfExtents=object_half_extents, rgbaColor=color)
+                    object_id = self.p.createMultiBody(self.object_mass, object_collision_shape_id, object_visual_shape_id)
+                elif shape_idx == 2:
+                    # Cylinder
+                    object_radius = self.object_width / 2
+                    object_length = 2 * self.object_width
+                    object_collision_shape_id = self.p.createCollisionShape(pybullet.GEOM_CYLINDER, radius=object_radius, height=object_length)
+                    object_visual_shape_id = self.p.createVisualShape(pybullet.GEOM_CYLINDER, radius=object_radius, length=object_length, rgbaColor=color)
+                    object_id = self.p.createMultiBody(self.object_mass, object_collision_shape_id, object_visual_shape_id)
+                else:
+                    # Sphere
+                    object_radius = self.object_width / 2
+                    object_collision_shape_id = self.p.createCollisionShape(pybullet.GEOM_SPHERE, radius=object_radius)
+                    object_visual_shape_id = self.p.createVisualShape(pybullet.GEOM_SPHERE, radius=object_radius, rgbaColor=color)
+                    object_id = self.p.createMultiBody(self.object_mass, object_collision_shape_id, object_visual_shape_id)
+                self.p.changeDynamics(object_id, -1, lateralFriction=0.5, rollingFriction=0.001)
+                self.object_ids.append(object_id)
+
+        else:
+            object_radius = self.object_width / 2
+            object_collision_shape_id = self.p.createCollisionShape(pybullet.GEOM_SPHERE, radius=object_radius)
+            object_visual_shape_id = self.p.createVisualShape(pybullet.GEOM_SPHERE, radius=object_radius, rgbaColor=VectorEnv.OBJECT_COLOR)
+            self.object_ids = []
+            for _ in range(self.num_objects):
+                object_id = self.p.createMultiBody(self.object_mass, object_collision_shape_id, object_visual_shape_id)
+                self.p.changeDynamics(object_id, -1, lateralFriction=0.5, rollingFriction=0.001)
+                self.object_ids.append(object_id)
 
         # Initialize collections
         self.obstacle_collision_body_b_ids_set = set(self.obstacle_ids)
@@ -508,6 +565,60 @@ class VectorEnv:
             expected_num_objects = 0
         assert self.num_objects == expected_num_objects, (self.num_objects, expected_num_objects)
 
+        def get_obstacle_box(obstacle, buffer_width=0.08):
+            x, y = obstacle['position']
+            x_len, y_len = obstacle['x_len'], obstacle['y_len']
+            b = box(x - x_len / 2, y - y_len / 2, x + x_len / 2, y + y_len / 2)
+            if buffer_width > 0:
+                b = b.buffer(buffer_width)
+            return b
+
+        def get_receptacle_box():
+            obstacle = {'position': self.receptacle_position[:2], 'heading': 0, 'x_len': VectorEnv.RECEPTACLE_WIDTH, 'y_len': VectorEnv.RECEPTACLE_WIDTH}
+            return get_obstacle_box(obstacle, buffer_width=0)
+
+        def draw_polygons(polygons):
+            import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
+            for polygon in polygons:
+                for coords in [polygon.exterior.coords] + [interior.coords for interior in polygon.interiors]:
+                    coords = np.asarray(coords)
+                    plt.plot(coords[:, 0], coords[:, 1])
+            padding = Robot.RADIUS
+            plt.axis([-self.room_length / 2 - padding, self.room_length / 2 + padding, -self.room_width / 2 - padding, self.room_width / 2 + padding])
+            plt.show()
+
+        def add_random_columns(max_num_columns):
+            num_columns = self.room_random_state.randint(max_num_columns) + 1
+            column_x_len, column_y_len = 0.1, 0.1
+            buffer_width = 0.08
+
+            polygons = [get_receptacle_box()] + [get_obstacle_box(obstacle) for obstacle in obstacles]
+            for _ in range(10):
+                new_obstacles = []
+                new_polygons = []
+                polygon_union = unary_union(polygons)
+                for _ in range(num_columns):
+                    for _ in range(100):
+                        x = self.room_random_state.uniform(
+                            -self.room_length / 2 + 2 * buffer_width + column_x_len / 2,
+                            self.room_length / 2 - 2 * buffer_width - column_x_len / 2
+                        )
+                        y = self.room_random_state.uniform(
+                            -self.room_width / 2 + 2 * buffer_width + column_y_len / 2,
+                            self.room_width / 2 - 2 * buffer_width - column_y_len / 2
+                        )
+                        obstacle = {'type': 'column', 'position': (x, y), 'heading': 0, 'x_len': column_x_len, 'y_len': column_y_len}
+                        b = get_obstacle_box(obstacle)
+                        if not polygon_union.intersects(b):
+                            new_obstacles.append(obstacle)
+                            new_polygons.append(b)
+                            polygon_union = unary_union(polygons + new_polygons)
+                            break
+                if len(new_polygons) == num_columns:
+                    break
+            obstacles.extend(new_obstacles)
+            #draw_polygons(polygons + new_polygons)
+
         def add_horiz_doorway(opening_width=0.30, x_offset=0, y_offset=0):
             divider_width = 0.05
             divider_len = (self.room_width - opening_width) / 2
@@ -519,17 +630,20 @@ class VectorEnv:
 
         # Walls
         obstacles = []
-        for x, y, length, width in [
+        for x, y, x_len, y_len in [
                 (-self.room_length / 2 - wall_thickness / 2, 0, wall_thickness, self.room_width),
                 (self.room_length / 2 + wall_thickness / 2, 0, wall_thickness, self.room_width),
                 (0, -self.room_width / 2 - wall_thickness / 2, self.room_length + 2 * wall_thickness, wall_thickness),
                 (0, self.room_width / 2 + wall_thickness / 2, self.room_length + 2 * wall_thickness, wall_thickness),
             ]:
-            obstacles.append({'type': 'wall', 'position': (x, y), 'heading': 0, 'x_len': length, 'y_len': width})
+            obstacles.append({'type': 'wall', 'position': (x, y), 'heading': 0, 'x_len': x_len, 'y_len': y_len})
 
         # Other obstacles
         if self.env_name in {'small_empty', 'large_empty'}:
             pass
+
+        elif self.env_name == 'large_columns':
+            add_random_columns(6)
 
         elif self.env_name == 'large_door':
             add_horiz_doorway(x_offset=self.room_random_state.uniform(-0.05, 0.05), y_offset=self.room_random_state.uniform(-0.05, 0.05))
@@ -601,9 +715,18 @@ class VectorEnv:
             robot.reset_pose(pos_x, pos_y, heading)
 
         # Reset object poses
-        for object_id in self.object_ids:
-            pos_x, pos_y, heading = self._get_random_object_pose()
-            self.reset_object_pose(object_id, pos_x, pos_y, heading)
+        if self.object_type == 'mixed_shapes':
+            for object_id in self.object_ids:
+                pos_x, pos_y, _ = self._get_random_object_pose()
+                position = (pos_x, pos_y, self.object_width / 2)
+                # See https://en.wikipedia.org/wiki/Rotation_matrix#Uniform_random_rotation_matrices
+                orientation = self.room_random_state.randn(4)
+                orientation /= np.linalg.norm(orientation)
+                self.p.resetBasePositionAndOrientation(object_id, position, orientation)
+        else:
+            for object_id in self.object_ids:
+                pos_x, pos_y, heading = self._get_random_object_pose()
+                self.reset_object_pose(object_id, pos_x, pos_y, heading)
 
         # Check if any robots need another pose reset
         done = False
@@ -1373,7 +1496,6 @@ class RealRobotController:
         self.prev_position = None
         self.prev_heading = None
         self.sim_steps = 0
-        self.target_object_id = None
         self.not_driving_sim_steps = None
         self.not_turning_sim_steps = None
 
@@ -1391,7 +1513,6 @@ class RealRobotController:
         self.prev_position = None
         self.prev_heading = None
         self.sim_steps = 0
-        self.target_object_id = None
         self.not_driving_sim_steps = 0
         self.not_turning_sim_steps = 0
 

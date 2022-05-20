@@ -40,6 +40,7 @@ robot_config: [pushing_robot: 1]
 room_length: 1.0
 room_width: 0.5
 num_objects: 50
+object_type:
 object_width: 0.012  # 12 mm
 object_mass: 0.00009  # 0.09 g
 env_name: small_empty

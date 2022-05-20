@@ -493,6 +493,7 @@ def main(args):
         env_name = 'small_empty'
         #env_name = 'large_empty'
         #env_name = 'large_door'
+        #env_name = 'large_columns'
         #env_name = 'large_center'
 
         # Robot config
@@ -507,6 +508,8 @@ def main(args):
         utils.apply_misc_env_modifications(kwargs, env_name)
 
         # Misc
+        #kwargs['object_type'] = 'mixed_sizes'
+        #kwargs['object_type'] = 'mixed_shapes'
         #kwargs['obstacle_collision_penalty'] = 0
         #kwargs['blowing_force'] = 0.5
 

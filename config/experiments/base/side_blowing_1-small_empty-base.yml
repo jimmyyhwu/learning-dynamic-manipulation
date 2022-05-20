@@ -31,6 +31,7 @@ num_mid_steps_per_high_step: 0
 num_objects: 50
 num_parallel_collectors: 8
 object_mass: 9.0e-05
+object_type: null
 object_width: 0.012
 obstacle_collision_penalty: 0.25
 overhead_map_scale: 1.0
