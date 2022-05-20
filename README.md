@@ -12,7 +12,7 @@ Jimmy Wu, Xingyuan Sun, Andy Zeng, Shuran Song, Szymon Rusinkiewicz, Thomas Funk
 
 ![](https://user-images.githubusercontent.com/6546428/161405574-e4d1cca9-3242-4625-b629-0bdd09efa054.gif) | ![](https://user-images.githubusercontent.com/6546428/161405575-0903f4c9-eeca-4420-997c-eb1dbf66c1eb.gif) | ![](https://user-images.githubusercontent.com/6546428/161405576-13f446bd-47ca-4d70-b6eb-387d61f337d8.gif)
 :---: | :---: | :---:
-![](https://user-images.githubusercontent.com/6546428/161405568-10c65098-5796-43fd-8a94-d66952b3d660.gif) | ![](https://user-images.githubusercontent.com/6546428/161405567-43ef08f2-cc22-4df0-ba8f-15fea80060c0.gif) | ![](https://user-images.githubusercontent.com/6546428/161405565-3f700627-2cf6-46d4-92f7-dee42432b19b.gif)
+![](https://user-images.githubusercontent.com/6546428/169499688-b5585212-2fe5-4a99-bd73-c41668abbe8a.gif) | ![](https://user-images.githubusercontent.com/6546428/169499691-8aa03784-052b-4946-862d-1022b8982810.gif) | ![](https://user-images.githubusercontent.com/6546428/169499681-891e1be1-4428-4f7a-b017-7f9f7cc3d293.gif)
 
 ## Installation
 
