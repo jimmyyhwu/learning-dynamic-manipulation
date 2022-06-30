@@ -6,6 +6,10 @@ This code release accompanies the following paper:
 
 Jimmy Wu, Xingyuan Sun, Andy Zeng, Shuran Song, Szymon Rusinkiewicz, Thomas Funkhouser
 
+*IEEE Robotics and Automation Letters (RA-L)*, 2022
+
+*IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)*, 2022
+
 [Project Page](https://learning-dynamic-manipulation.cs.princeton.edu) | [PDF](https://learning-dynamic-manipulation.cs.princeton.edu/paper.pdf) | [arXiv](https://arxiv.org/abs/2204.02390)
 
 **Abstract:** We investigate pneumatic non-prehensile manipulation (i.e., blowing) as a means of efficiently moving scattered objects into a target receptacle. Due to the chaotic nature of aerodynamic forces, a blowing controller must (i) continually adapt to unexpected changes from its actions, (ii) maintain fine-grained control, since the slightest misstep can result in large unintended consequences (e.g., scatter objects already in a pile), and (iii) infer long-range plans (e.g., move the robot to strategic blowing locations). We tackle these challenges in the context of deep reinforcement learning, introducing a multi-frequency version of the spatial action maps framework. This allows for efficient learning of vision-based policies that effectively combine high-level planning and low-level closed-loop control for dynamic mobile manipulation. Experiments show that our system learns efficient behaviors for the task, demonstrating in particular that blowing achieves better downstream performance than pushing, and that our policies improve performance over baselines. Moreover, we show that our system naturally encourages emergent specialization between the different subpolicies spanning low-level fine-grained control and high-level planning. On a real mobile robot equipped with a miniature air blower, we show that our simulation-trained policies transfer well to a real environment and can generalize to novel objects.
@@ -208,7 +212,7 @@ If you find this work useful for your research, please consider citing:
 @article{wu2022learning,
   title = {Learning Pneumatic Non-Prehensile Manipulation with a Mobile Blower},
   author = {Wu, Jimmy and Sun, Xingyuan and Zeng, Andy and Song, Shuran and Rusinkiewicz, Szymon and Funkhouser, Thomas},
-  journal = {arXiv preprint arXiv:2204.02390},
+  journal = {IEEE Robotics and Automation Letters},
   year = {2022}
 }
 ```
